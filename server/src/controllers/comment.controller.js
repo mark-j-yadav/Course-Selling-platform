@@ -1,36 +1,39 @@
 // controllers/comment.controller.js
 
-import * as commentService from "../services/comment.service.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import Comment  from "../models/Comment.model.js";
 
-export const addComment = async (req, res) => {
-  const comment = await commentService.addComment(
-    req.user.id,
-    req.body.courseId,
-    req.body.text
+// ➕ Add Comment
+const addComment = asyncHandler(async (req, res) => {
+  const { courseId, text } = req.body;
+
+  if (!text) {
+    throw new ApiError(400, "Comment is required");
+  }
+
+  const comment = await Comment.create({
+    user: req.user._id,
+    course: courseId,
+    text,
+  });
+
+  return res.status(201).json(
+    new ApiResponse(201, comment, "Comment added")
   );
+});
 
-  res.json({
-    success: true,
-    data: comment,
-  });
-};
 
-export const getComments = async (req, res) => {
-  const comments = await commentService.getComments(
-    req.params.courseId
+// 📥 Get Comments
+const getComments = asyncHandler(async (req, res) => {
+  const comments = await Comment.find({
+    course: req.params.courseId,
+  }).populate("user", "name");
+
+  return res.status(200).json(
+    new ApiResponse(200, comments, "Comments fetched")
   );
+});
 
-  res.json({
-    success: true,
-    data: comments,
-  });
-};
-
-export const deleteComment = async (req, res) => {
-  await commentService.deleteComment(req.params.id, req.user.id);
-
-  res.json({
-    success: true,
-    message: "Comment deleted",
-  });
-};
+export { addComment, getComments };

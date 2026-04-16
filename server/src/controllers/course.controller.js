@@ -1,56 +1,71 @@
 // controllers/course.controller.js
 
-import * as courseService from "../services/course.service.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import  Course  from "../models/Course.model.js";
 
-export const createCourse = async (req, res) => {
-  try {
-    const course = await courseService.createCourse(req.body, req.user);
+// ➕ Create Course (Admin)
+const createCourse = asyncHandler(async (req, res) => {
+  const { title, description, price } = req.body;
 
-    res.status(201).json({
-      success: true,
-      data: course,
-    });
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+  if (!title || !description || !price) {
+    throw new ApiError(400, "All fields are required");
   }
-};
 
-export const getCourses = async (req, res) => {
-  const courses = await courseService.getCourses();
-
-  res.json({
-    success: true,
-    data: courses,
+  const course = await Course.create({
+    title,
+    description,
+    price,
+    instructor: req.user._id,
   });
-};
 
-export const getCourseById = async (req, res) => {
-  const course = await courseService.getCourseById(req.params.id);
-
-  res.json({
-    success: true,
-    data: course,
-  });
-};
-
-export const updateCourse = async (req, res) => {
-  const course = await courseService.updateCourse(
-    req.params.id,
-    req.body
+  return res.status(201).json(
+    new ApiResponse(201, course, "Course created successfully")
   );
+});
 
-  res.json({
-    success: true,
-    data: course,
-    message: "Course updated",
-  });
-};
 
-export const deleteCourse = async (req, res) => {
-  await courseService.deleteCourse(req.params.id);
+// 📚 Get All Courses
+const getAllCourses = asyncHandler(async (req, res) => {
+  const courses = await Course.find();
 
-  res.json({
-    success: true,
-    message: "Course deleted",
-  });
+  return res.status(200).json(
+    new ApiResponse(200, courses, "Courses fetched successfully")
+  );
+});
+
+
+// 🔍 Get Single Course
+const getCourseById = asyncHandler(async (req, res) => {
+  const course = await Course.findById(req.params.id);
+
+  if (!course) {
+    throw new ApiError(404, "Course not found");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, course, "Course fetched successfully")
+  );
+});
+
+
+// ❌ Delete Course (Admin)
+const deleteCourse = asyncHandler(async (req, res) => {
+  const course = await Course.findByIdAndDelete(req.params.id);
+
+  if (!course) {
+    throw new ApiError(404, "Course not found");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, {}, "Course deleted successfully")
+  );
+});
+
+export {
+  createCourse,
+  getAllCourses,
+  getCourseById,
+  deleteCourse
 };

@@ -2,18 +2,18 @@
 
 import express from "express";
 import {
+  getDashboardStats,
   getAllUsers,
-  deleteUser,
-  makeAdmin,
+  getAllOrders
 } from "../controllers/admin.controller.js";
 
-import { auth, isAdmin } from "../middleware/auth.middleware.js";
+import { protect } from "../middleware/auth.middleware.js";
+import { adminOnly } from "../middleware/admin.middleware.js";
 
 const router = express.Router();
 
-// Users management
-router.get("/users", auth, isAdmin, getAllUsers);
-router.delete("/users/:id", auth, isAdmin, deleteUser);
-router.put("/users/:id/role", auth, isAdmin, makeAdmin);
+router.get("/stats", protect, adminOnly, getDashboardStats);
+router.get("/users", protect, adminOnly, getAllUsers);
+router.get("/orders", protect, adminOnly, getAllOrders);
 
 export default router;

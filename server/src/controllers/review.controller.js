@@ -1,43 +1,40 @@
 // controllers/review.controller.js
 
-import * as reviewService from "../services/review.service.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import  Review  from "../models/Review.model.js";
 
-export const addReview = async (req, res) => {
-  try {
-    const { courseId, rating, comment } = req.body;
+// ✍️ Add Review
+const addReview = asyncHandler(async (req, res) => {
+  const { courseId, rating, comment } = req.body;
 
-    const review = await reviewService.addReview(
-      req.user.id,
-      courseId,
-      rating,
-      comment
-    );
-
-    res.status(201).json({
-      success: true,
-      data: review,
-    });
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+  if (!rating || !comment) {
+    throw new ApiError(400, "All fields required");
   }
-};
 
-export const getCourseReviews = async (req, res) => {
-  const reviews = await reviewService.getCourseReviews(
-    req.params.courseId
+  const review = await Review.create({
+    user: req.user._id,
+    course: courseId,
+    rating,
+    comment,
+  });
+
+  return res.status(201).json(
+    new ApiResponse(201, review, "Review added successfully")
   );
+});
 
-  res.json({
-    success: true,
-    data: reviews,
-  });
-};
 
-export const deleteReview = async (req, res) => {
-  await reviewService.deleteReview(req.params.id, req.user.id);
+// 📥 Get Reviews
+const getReviews = asyncHandler(async (req, res) => {
+  const reviews = await Review.find({
+    course: req.params.courseId,
+  }).populate("user", "name");
 
-  res.json({
-    success: true,
-    message: "Review deleted",
-  });
-};
+  return res.status(200).json(
+    new ApiResponse(200, reviews, "Reviews fetched")
+  );
+});
+
+export { addReview, getReviews };

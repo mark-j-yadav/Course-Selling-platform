@@ -3,21 +3,14 @@
 import express from "express";
 import {
   addComment,
-  getComments,
-  deleteComment,
+  getComments
 } from "../controllers/comment.controller.js";
 
-import { auth } from "../middleware/auth.middleware.js";
+import { protect } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-// Add comment
-router.post("/", auth, addComment);
-
-// Get comments of course
+router.post("/", protect, addComment);
 router.get("/:courseId", getComments);
-
-// Delete comment
-router.delete("/:id", auth, deleteComment);
 
 export default router;

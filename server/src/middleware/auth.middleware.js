@@ -1,19 +1,20 @@
 import jwt from "jsonwebtoken";
+import  User from "../models/User.models.js";
 
-export const auth = (req, res, next) => {
-  const token = req.headers.authorization;
+export const protect = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
 
-  if (!token) return res.status(401).json({ msg: "No token" });
+    if (!token) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
 
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  req.user = decoded;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-  next();
-};
+    req.user = await User.findById(decoded.id).select("-password");
 
-export const isAdmin = (req, res, next) => {
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ msg: "Admin only" });
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Invalid token" });
   }
-  next();
 };

@@ -1,40 +1,42 @@
 // controllers/order.controller.js
 
-import * as orderService from "../services/order.service.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import Order  from "../models/Order.model.js";
+import Course  from "../models/Course.model.js";
 
-export const createOrder = async (req, res) => {
-  try {
-    const { courseId, price } = req.body;
 
-    const order = await orderService.createOrder(
-      req.user.id,
-      courseId,
-      price
-    );
+// 🛒 Create Order
+const createOrder = asyncHandler(async (req, res) => {
+  const { courseId } = req.body;
 
-    res.status(201).json({
-      success: true,
-      data: order,
-    });
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+  const course = await Course.findById(courseId);
+
+  if (!course) {
+    throw new ApiError(404, "Course not found");
   }
-};
 
-export const getUserOrders = async (req, res) => {
-  const orders = await orderService.getUserOrders(req.user.id);
-
-  res.json({
-    success: true,
-    data: orders,
+  const order = await Order.create({
+    user: req.user._id,
+    course: courseId,
+    amount: course.price,
   });
-};
 
-export const getAllOrders = async (req, res) => {
-  const orders = await orderService.getAllOrders();
+  return res.status(201).json(
+    new ApiResponse(201, order, "Order created")
+  );
+});
 
-  res.json({
-    success: true,
-    data: orders,
-  });
-};
+
+// 📦 Get My Orders
+const getMyOrders = asyncHandler(async (req, res) => {
+  const orders = await Order.find({ user: req.user._id })
+    .populate("course");
+
+  return res.status(200).json(
+    new ApiResponse(200, orders, "Orders fetched")
+  );
+});
+
+export { createOrder, getMyOrders };

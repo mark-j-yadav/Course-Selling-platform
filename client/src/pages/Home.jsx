@@ -1,13 +1,23 @@
-import Hero from "../components/Hearo";
+import { useEffect, useState } from "react";
+import api from "../services/api";
 import CourseCard from "../components/CourseCard";
 
 const Home = () => {
+  const [courses, setCourses] = useState([]);
+
+  useEffect(() => {
+    api.get("/courses")
+      .then(res => setCourses(res.data.data));
+  }, []);
+
   return (
     <div>
-      <Hero />
+      <h1 className="text-4xl font-bold mb-6">Explore Courses</h1>
 
-      <div className="grid md:grid-cols-3 gap-8 mt-10">
-        {/* Map courses */}
+      <div className="grid md:grid-cols-3 gap-6">
+        {courses.map(c => (
+          <CourseCard key={c._id} course={c} />
+        ))}
       </div>
     </div>
   );

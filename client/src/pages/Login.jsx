@@ -1,46 +1,35 @@
-// pages/Login.jsx
-
-import { useState } from "react";
-import api from "../services/api";
+import { useState, useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({});
+  const { login } = useContext(AuthContext);
+  const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const res = await api.post("/auth/login", form);
-    localStorage.setItem("token", res.data.token);
-
-    alert("Login Success");
+    await login(form);
+    navigate("/");
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen">
-      <form onSubmit={handleLogin}
-        className="glass p-8 rounded-2xl w-96">
+    <form onSubmit={handleSubmit}
+      className="max-w-md mx-auto mt-20 bg-gray-900 p-6 rounded">
 
-        <h2 className="text-2xl font-bold mb-6 text-center">
-          Login
-        </h2>
+      <input placeholder="Email"
+        onChange={e=>setForm({...form,email:e.target.value})}
+        className="w-full mb-4 p-2 bg-gray-800" />
 
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full mb-4 p-2 bg-transparent border rounded"
-          onChange={(e)=>setForm({...form,email:e.target.value})}
-        />
+      <input type="password" placeholder="Password"
+        onChange={e=>setForm({...form,password:e.target.value})}
+        className="w-full mb-4 p-2 bg-gray-800" />
 
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full mb-4 p-2 bg-transparent border rounded"
-          onChange={(e)=>setForm({...form,password:e.target.value})}
-        />
+      <button className="w-full bg-blue-500 py-2 rounded">
+        Login
+      </button>
 
-        <button className="btn-glow w-full">Login</button>
-      </form>
-    </div>
+    </form>
   );
 };
 
